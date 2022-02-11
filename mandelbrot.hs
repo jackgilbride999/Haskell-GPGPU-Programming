@@ -30,7 +30,7 @@ step c (unlift -> (z, i)) = lift (next c z, i + constant 1)
 dot :: Exp (Complex Float) -> Exp Float 
 dot (unlift -> x :+ y) = x*x + y*y
 
-mandelbrot :: Int -> Int -> Int -> Float -> Complex Float -> Float ->Acc (Array DIM2 (Complex Float, Int))
+mandelbrot :: Int -> Int -> Int -> Float -> Complex Float -> Float -> Acc (Array DIM2 (Complex Float, Int))
 mandelbrot screenX screenY depth radius (x0 :+ y0) width = 
     A.generate 
                 (A.constant (Z :. screenY :. screenX))                          -- the size of the array to compute

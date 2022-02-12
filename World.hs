@@ -26,6 +26,8 @@ import Graphics.Gloss.Interface.Pure.Game                           hiding ( Vec
 import System.Exit
 import Prelude                                                      as P
 
+import Examples.Internal
+
 import Data.Array.Accelerate                                        ( Arrays, Array, Scalar, Vector, DIM2, Elt, Acc, Z(..), (:.)(..) )
 import qualified Data.Array.Accelerate                              as A
 

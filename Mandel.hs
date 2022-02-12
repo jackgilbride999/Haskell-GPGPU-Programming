@@ -6,6 +6,8 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE ViewPatterns        #-}
 
+module Mandel where
+
 import Data.Array.Accelerate                              as A
 import Data.Array.Accelerate.Data.Complex                 as A
 import Data.Array.Accelerate.Data.Colour.RGB              as A

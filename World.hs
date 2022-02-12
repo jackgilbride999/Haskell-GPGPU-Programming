@@ -14,7 +14,7 @@ module World (
 
 ) where 
 
--- import Mandel
+import Mandel
 import Config
 
 import Data.Char
@@ -89,7 +89,7 @@ setPrecision opts prec World{..} =
         backend = get optBackend opts
     in
     case prec of
-        Float   -> let cvt :: (Elt a, P.Real a) => Scalar a -> Scalar Float
+        Float   -> let  cvt :: (Elt a, P.Real a) => Scalar a -> Scalar Float
                         cvt x = unit (P.realToFrac (the x))
                     in
                     World {  worldPrecision = Float
@@ -100,6 +100,17 @@ setPrecision opts prec World{..} =
                            , worldRender    = run1 backend (uncurry5 mandel)
                            , .. 
                     }
+        Double ->   let cvt :: (Elt a, P.Real a) => Scalar a -> Scalar Double
+                        cvt x = unit (P.realToFrac (the x))
+                    in
+                    World   { worldPrecision  = Double
+                            , worldPosX       = cvt worldPosX
+                            , worldPosY       = cvt worldPosY
+                            , worldWidth      = cvt worldWidth
+                            , worldRadius     = cvt worldRadius
+                            , worldRender     = run1 backend (uncurry5 mandel)
+                            , ..
+                    }
 
 -- Draw the world
 -- 
@@ -109,7 +120,7 @@ draw = return . worldPicture
 -- React to events
 -- 
 react :: Config -> Options -> Event -> World -> IO World
-react conf opts even world@World{..} =
+react conf opts event world@World{..} =
     case event of
         -- zooming
         EventKey (Char 'w') s _ _       -> toggle zooming 0.975 s world
@@ -181,7 +192,7 @@ zooming = lens worldZooming (\f World{..} -> World { worldZooming = f worldZoomi
 panning :: World :-> Maybe (Float, Float)
 panning = lens worldPanning (\f World{..} -> World { worldPanning = f worldPanning, .. })
 
-the :: Elt a => a -> Scalar a
+the :: Elt a => Scalar a -> a
 the a = a `A.indexArray` Z
 
 unit :: Elt a => a -> Scalar a
@@ -206,7 +217,7 @@ loadWorld (posX, posY, width, iters, radius) World{..}
             ,  worldWidth   = unit (P.realToFrac width)
             ,  worldIters   = unit (P.truncate iters)
             ,  worldRadius  = unit (P.realToFrac radius)
-
+            ,  ..
     }
 
 loadPreset :: Int -> World -> World

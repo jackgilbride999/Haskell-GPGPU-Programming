@@ -1,0 +1,21 @@
+List of cabal installations required:
+
+accelerate-debug
+criterion
+fclabels
+accelerate
+test-framework
+network-http
+network-conduit
+HTTP
+http-types
+test-framework-providers
+test-framework-hunit
+test-framework-quickcheck2
+statistics-0.15.2.0
+accelerate-llvm
+accelerate-llvm-native
+accelerate-io
+accelerate-io-codec
+accelerate-io-bmp
+colour-accelerate

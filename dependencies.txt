@@ -19,3 +19,4 @@ accelerate-io
 accelerate-io-codec
 accelerate-io-bmp
 colour-accelerate
+gloss

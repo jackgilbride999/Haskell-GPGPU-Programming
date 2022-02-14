@@ -65,11 +65,11 @@ runBenchmarks opt argv benchmarks
           exists <- doesFileExist rawFile
           if exists
              then either fail return =<< do
-#if MIN_VERSION_criterion(1,1,1)
+-- #if MIN_VERSION_criterion(1,1,1)
                     rs <- readRecords rawFile
-#else
-                    rs <- readReports rawFile
-#endif
+ -- #else
+ --                   rs <- readReports rawFile
+-- #endif
                     case get rawDataFile crit of
                         Nothing   -> removeFile rawFile >> return rs
                         Just _    -> return rs

@@ -21,7 +21,7 @@ import Data.Char
 import Data.Int
 import Data.Label
 import Data.Word
-import Graphics.Gloss.Data.Picture                       as G
+import Graphics.Gloss.Accelerate.Data.Picture                       as G
 import Graphics.Gloss.Interface.Pure.Game                           hiding ( Vector, translate, scale )
 import System.Exit
 import Prelude                                                      as P

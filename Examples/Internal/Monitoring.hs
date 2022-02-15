@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.Monitoring
+-- Module:      : Examples.Internal.Monitoring
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --

@@ -1,5 +1,5 @@
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.Util
+-- Module:      : Examples.Internal.Util
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --

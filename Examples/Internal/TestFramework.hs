@@ -1,5 +1,5 @@
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.TestFramework
+-- Module:      : Examples.Internal.TestFramework
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --

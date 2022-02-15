@@ -2,7 +2,7 @@
 {-# LANGUAGE CPP           #-}
 {-# LANGUAGE TypeOperators #-}
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.Backend
+-- Module:      : Examples.Internal.Backend
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --
@@ -89,7 +89,7 @@ defaultBackend :: Backend
 defaultBackend =
   case maxBound of
     Interpreter -> Interpreter
-    --_           -> succ Interpreter
+    _           -> succ Interpreter
 
 
 -- The set of available backnds. This will be used for both the command line

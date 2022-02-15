@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.Report
+-- Module:      : Examples.Internal.Report
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --
@@ -19,7 +19,7 @@ import Criterion.Types
 import Examples.Internal.ParseArgs
 
 #ifdef ACCELERATE_ENABLE_CODESPEED
-import Data.Array.Accelerate.Examples.Internal.Codespeed
+import Examples.Internal.Codespeed
 #endif
 
 

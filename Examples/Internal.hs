@@ -1,6 +1,6 @@
 {-# OPTIONS_HADDOCK hide #-}
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal
+-- Module:      : Examples.Internal
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --

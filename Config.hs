@@ -37,7 +37,15 @@ header =
 
 footer = 
     [
-        "Runtime usage:"
-    ,   "   ESC         quit"
-    ,   "..."
-    ]
+      " Runtime usage:"
+    , "     ESC           quit"
+    , "     mouse drag    translate display"
+    , "     w/s           zoom in/out"
+    , "     a/d           iteration count"
+    , "     z/c           escape radius"
+    , "     0 .. 9        select presets"
+    , "     r             reset display"
+    , "     .             print current configuration"
+    , "     p             switch between single/double precision"
+    , ""    
+  ]

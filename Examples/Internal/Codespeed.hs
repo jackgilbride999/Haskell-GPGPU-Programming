@@ -5,7 +5,7 @@
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TupleSections       #-}
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.Codespeed
+-- Module:      : Examples.Internal.Codespeed
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --

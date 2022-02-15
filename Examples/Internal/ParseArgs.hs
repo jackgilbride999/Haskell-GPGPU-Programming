@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeOperators   #-}
 {-# LANGUAGE ViewPatterns    #-}
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.ParseArgs
+-- Module:      : Examples.Internal.ParseArgs
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --
@@ -27,9 +27,9 @@ module Examples.Internal.ParseArgs (
 
 ) where
 
--- #if !MIN_VERSION_accelerate(1,2,0)
--- import Data.Array.Accelerate.Debug                                              ( accInit )
--- #endif
+#if !MIN_VERSION_accelerate(1,2,0)
+import Data.Array.Accelerate.Debug                                              ( accInit )
+#endif
 import Examples.Internal.Backend
 import qualified Examples.Internal.Criterion.Config       as Criterion
 import qualified Examples.Internal.TestFramework.Config   as TestFramework
@@ -63,7 +63,7 @@ data Options = Options
   , _optVariant         :: String                       -- ^ Variant to use for reported results
   , _optHelp            :: Bool                         -- ^ Display help message (and exit)?
   --
-  , _optTestFramework   :: TestFramework.Config          -- ^ Options for test-framework
+  , _optTestFramework   :: TestFramework.Config         -- ^ Options for test-framework
   , _optCriterion       :: Criterion.Config             -- ^ Options for criterion benchmarks
   }
 
@@ -215,9 +215,9 @@ parseArgs :: [OptDescr (config -> config)]      -- ^ the user option description
           -> [String]                           -- ^ footer text
           -> IO (config, Options, [String])
 parseArgs programOptions programConfig header footer = do
--- #if !MIN_VERSION_accelerate(1,2,0)
---  accInit
--- #endif
+#if !MIN_VERSION_accelerate(1,2,0)
+  accInit
+#endif
   args <- getArgs
 
   let

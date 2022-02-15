@@ -1,7 +1,7 @@
 {-# LANGUAGE KindSignatures  #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- |
--- Module:      : Data.Array.Accelerate.Examples.Internal.TestFramework.Config
+-- Module:      : Examples.Internal.TestFramework.Config
 -- Copyright    : [2014..2020] Trevor L. McDonell
 -- License      : BSD3
 --

@@ -10,8 +10,8 @@
 {-# LANGUAGE TypeOperators       #-}
 
 module World (
-
-
+  World(..),
+  updateWorld, renderWorld, initialWorld, draw, react, advance,
 ) where 
 
 import Mandel
@@ -40,7 +40,7 @@ data World where
         { worldPicture      ::  !Picture
         , worldDirty        ::  Bool
         , worldPrecision    ::  Precision
-        , worldPalette      ::  !(A.Vector Word32) -- <-- A.Vector or G.Vector?
+        , worldPalette      ::  !(Vector Word32) -- <-- A.Vector or G.Vector?
         , worldRender       ::  (Scalar a, Scalar a, Scalar a, Scalar Int32, Scalar a) -> Array DIM2 Word32
         , worldSizeX        ::  !Int
         , worldSizeY        ::  !Int
@@ -78,8 +78,8 @@ setPrecision :: Options -> Precision -> World -> World
 setPrecision opts prec World{..} = 
     let
         mandel :: (A.RealFloat a, A.FromIntegral Int a, A.ToFloating Int32 a)
-                => Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar Int32) -> Acc (Scalar a) -> Acc (Array DIM2 World)
-        mandel x y w l r = A.map (escapeToRGBA 1 (A.use worldPalette)) $ mandelbrot worldSizeY x y w l r
+                => Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar Int32) -> Acc (Scalar a) -> Acc (Array DIM2 Word32)
+        mandel x y w l r = A.map (escapeToRGBA l (A.use worldPalette)) $ mandelbrot worldSizeX worldSizeY x y w l r
 
         uncurry5 :: (Arrays a, Arrays b, Arrays c, Arrays d, Arrays e, Arrays f)
                 => (Acc a -> Acc b -> Acc c -> Acc d -> Acc e -> Acc f)
@@ -173,7 +173,14 @@ react conf opts event world@World{..} =
 
 
 -- Move and zoom the display based on the key state
--- 
+
+--
+advance :: Float -> World -> IO World
+advance _ world@World{..}
+  | Just f <- worldZooming  = return $ updateWorld $ World { worldDirty = False, worldWidth = A.fromList Z [ P.realToFrac f * the worldWidth ], .. }
+  | worldDirty              = return $ updateWorld $ World { worldDirty = False, .. }
+  | otherwise               = return world
+
 updateWorld :: World -> World
 updateWorld world = 
     world { worldPicture = bitmapOfArray (renderWorld world) True}

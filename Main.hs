@@ -8,7 +8,7 @@ import Data.Label
 import Prelude                                  as P
 import Data.Array.Accelerate.IO.Codec.BMP       as A
 import Examples.Internal                        as A
-import qualified Graphics.Gloss.Interface.IO.Game
+import qualified Graphics.Gloss.Interface.IO.Game as G
 
 
 main :: IO ()
@@ -17,7 +17,7 @@ main = do
     (conf, opts, rest) <- parseArgs options defaults header footer
 
     let world   = initialWorld conf opts
-        bmp     = get configFilePath
+        bmp     = get configFilePath conf
         width   = get configWidth conf
         height  = get configHeight conf
 

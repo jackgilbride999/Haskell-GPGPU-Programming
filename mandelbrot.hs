@@ -15,6 +15,10 @@ import Data.Array.Accelerate.IO.Codec.BMP
 import Data.Array.Accelerate.LLVM.Native                  as CPU   
 
 import qualified Prelude                                  as P
+import Control.Monad
+import Control.DeepSeq
+import Criterion.Measurement
+
 
 -- compute the value z_(n+1) at a given point c
 next :: Exp (Complex Float) -> Exp (Complex Float) -> Exp (Complex Float)
@@ -124,13 +128,14 @@ linear (x0,x1) (y0,y1) x =
   y0 + (x - x0) * (y1 - y0) / (x1 - x0)
 
 main :: P.IO ()
-main = 
-    let
-        width = 800
-        height = 600
-        limit = 1000
-        radius = 256
-        --
-        img = A.map packRGB $ A.map (escapeToColour limit) $ mandelbrot width height limit radius ((-0.7) :+ 0) 3.067
-    in 
-        writeImageToBMP "mandelbrot.bmp" (run img)
+main = do 
+    initializeTime 
+    time1 <- getCPUTime 
+    let test = run $ mandelbrot 10000 10000 1000 256 ((-0.7) :+ 0) 3.067     
+    time2 <- test `deepseq` getCPUTime 
+    P.print $ time2 - time1
+
+    let img = run $  A.map packRGB $ A.map (escapeToColour 1000) $ use test 
+    time3 <- img `deepseq` getCPUTime 
+    P.print $ time3 - time2
+    writeImageToBMP "mandelbrot.bmp" img

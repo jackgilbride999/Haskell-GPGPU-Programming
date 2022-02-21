@@ -12,7 +12,9 @@ import Data.Array.Accelerate.Data.Colour.RGB              as A
 import Data.Array.Accelerate.Data.Colour.Names            as A
 import Data.Array.Accelerate.IO.Codec.BMP
 
-import Data.Array.Accelerate.LLVM.Native                  as CPU   
+import Data.Array.Accelerate.LLVM.Native                  as CPU 
+-- import Data.Array.Accelerate.LLVM.PTX                     as GPU   
+
 
 import qualified Prelude                                  as P
 import Control.Monad
@@ -131,11 +133,11 @@ main :: P.IO ()
 main = do 
     initializeTime 
     time1 <- getCPUTime 
-    let test = run $ mandelbrot 10000 10000 1000 256 ((-0.7) :+ 0) 3.067     
+    let test = CPU.run $ mandelbrot 10000 10000 1000 256 ((-0.7) :+ 0) 3.067     
     time2 <- test `deepseq` getCPUTime 
     P.print $ time2 - time1
 
-    let img = run $  A.map packRGB $ A.map (escapeToColour 1000) $ use test 
+    let img = CPU.run $  A.map packRGB $ A.map (escapeToColour 1000) $ use test 
     time3 <- img `deepseq` getCPUTime 
     P.print $ time3 - time2
     writeImageToBMP "mandelbrot.bmp" img

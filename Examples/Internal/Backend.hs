@@ -21,7 +21,7 @@ import Prelude                                                      as P
 import Data.Label
 import System.Console.GetOpt
 
-#define ACCELERATE_LLVM_NATIVE_BACKEND TRUE
+-- #define ACCELERATE_LLVM_NATIVE_BACKEND TRUE
 #define ACCELERATE_LLVM_PTX_BACKEND TRUE
 
 import Data.Array.Accelerate

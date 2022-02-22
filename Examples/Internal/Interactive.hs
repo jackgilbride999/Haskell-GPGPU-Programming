@@ -22,6 +22,8 @@ module Examples.Internal.Interactive (
 
 import Examples.Internal.ParseArgs
 
+#define ACCELERATE_ENABLE_GUI TRUE
+
 #ifdef ACCELERATE_ENABLE_GUI
 import Data.Label
 import Control.Monad
@@ -37,7 +39,7 @@ runInteractive _ _ _
   = return ()
 #else
 runInteractive opt argv gui
-  = unless (get optBenchmark opt)
-  $ withArgs argv gui
+  = --unless (get optBenchmark opt)$ 
+  withArgs argv gui
 #endif
 

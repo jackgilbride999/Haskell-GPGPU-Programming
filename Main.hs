@@ -21,8 +21,8 @@ main = do
         width   = get configWidth conf
         height  = get configHeight conf
 
-    --runBenchmarks opts rest
-    --    [ bench "mandelbrot" $ whnf renderWorld world ]
+    runBenchmarks opts rest
+        [ bench "mandelbrot" $ whnf renderWorld world ]
 
     case bmp of
         Just path   -> writeImageToBMP path (renderWorld world)

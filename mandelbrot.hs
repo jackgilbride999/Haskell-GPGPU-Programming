@@ -140,4 +140,7 @@ main = do
     let img = GPU.run $  A.map packRGB $ A.map (escapeToColour 1000) $ use test 
     time3 <- img `deepseq` getCPUTime 
     P.print $ time3 - time2
+
     writeImageToBMP "mandelbrot.bmp" img
+    time4 <- getCPUTime
+    P.print $ time4 - time3

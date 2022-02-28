@@ -1,5 +1,3 @@
--- Adapted from Mandelbrot accelerate example at https://github.com/AccelerateHS/accelerate-examples/blob/a973ee423b5eadda6ef2e2504d2383f625e49821/examples/mandelbrot/World.hs
-
 {-# LANGUAGE BangPatterns        #-}
 {-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE FlexibleContexts    #-}
@@ -10,9 +8,11 @@
 {-# LANGUAGE TypeOperators       #-}
 
 module World (
+
   World(..),
   updateWorld, renderWorld, initialWorld, draw, react, advance,
-) where 
+
+) where
 
 import Mandel
 import Config
@@ -26,154 +26,154 @@ import Graphics.Gloss.Interface.Pure.Game                           hiding ( Vec
 import System.Exit
 import Prelude                                                      as P
 
-import Examples.Internal
-
 import Data.Array.Accelerate                                        ( Arrays, Array, Scalar, Vector, DIM2, Elt, Acc, Z(..), (:.)(..) )
+import Examples.Internal                                            as A
 import qualified Data.Array.Accelerate                              as A
 
+
 -- World state
+-- -----------
 
 data Precision  = Float | Double
 
 data World where
-    World :: (P.Show a, P.RealFloat a, A.RealFloat a) =>
-        { worldPicture      ::  !Picture
-        , worldDirty        ::  Bool
-        , worldPrecision    ::  Precision
-        , worldPalette      ::  !(Vector Word32) -- <-- A.Vector or G.Vector?
-        , worldRender       ::  (Scalar a, Scalar a, Scalar a, Scalar Int32, Scalar a) -> Array DIM2 Word32
-        , worldSizeX        ::  !Int
-        , worldSizeY        ::  !Int
-        , worldPosX         ::  Scalar a
-        , worldPosY         ::  Scalar a
-        , worldWidth        ::  Scalar a
-        , worldIters        ::  Scalar Int32
-        , worldRadius       ::  Scalar a
-        , worldPanning      ::  Maybe (Float, Float)
-        , worldZooming      ::  Maybe Double
-        }
-        -> World
+  World :: (P.Show a, P.RealFloat a, A.RealFloat a) =>
+    { worldPicture      :: !Picture
+    , worldDirty        :: Bool
+    , worldPrecision    :: Precision
+    , worldPalette      :: !(Vector Word32)
+    , worldRender       :: (Scalar a, Scalar a, Scalar a, Scalar Int32, Scalar a) -> Array DIM2 Word32
+    , worldSizeX        :: !Int
+    , worldSizeY        :: !Int
+    , worldPosX         :: Scalar a
+    , worldPosY         :: Scalar a
+    , worldWidth        :: Scalar a
+    , worldIters        :: Scalar Int32
+    , worldRadius       :: Scalar a
+    , worldPanning      :: Maybe (Float,Float)
+    , worldZooming      :: Maybe Double
+    }
+    -> World
 
 initialWorld :: Config -> Options -> World
 initialWorld conf opts
-    = setPrecision opts Double
-    $ loadPreset 0
-    $ World { worldDirty        = True
-            , worldPrecision    = Double
-            , worldPicture      = blank
-            , worldPalette      = run (get optBackend opts) (ultraPalette 2048)
-            , worldSizeX        = get configWidth conf
-            , worldSizeY        = get configHeight conf
-            , worldPanning      = Nothing
-            , worldZooming      = Nothing
-            , worldPosX         = unit 0 :: Scalar Double
-            , worldPosY         = unit 0
-            , worldWidth        = unit 0
-            , worldRadius       = unit 0
-            , worldIters        = unit 0
-            , worldRender       = \_ -> A.fromList (Z:.0:.0) []
-            }
+  = setPrecision opts Double
+  $ loadPreset 0
+  $ World { worldDirty      = True
+          , worldPrecision  = Double
+          , worldPicture    = blank
+          , worldPalette    = run (get optBackend opts) (ultraPalette 2048)
+          , worldSizeX      = get configWidth conf
+          , worldSizeY      = get configHeight conf
+          , worldPanning    = Nothing
+          , worldZooming    = Nothing
+          , worldPosX       = unit 0 :: Scalar Double
+          , worldPosY       = unit 0
+          , worldWidth      = unit 0
+          , worldRadius     = unit 0
+          , worldIters      = unit 0
+          , worldRender     = \_ -> A.fromList (Z:.0:.0) []
+          }
 
 setPrecision :: Options -> Precision -> World -> World
-setPrecision opts prec World{..} = 
-    let
-        mandel :: (A.RealFloat a, A.FromIntegral Int a, A.ToFloating Int32 a)
-                => Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar Int32) -> Acc (Scalar a) -> Acc (Array DIM2 Word32)
-        mandel x y w l r = A.map (escapeToRGBA l (A.use worldPalette)) $ mandelbrot worldSizeX worldSizeY x y w l r
+setPrecision opts prec World{..} =
+  let
+      mandel :: (A.RealFloat a, A.FromIntegral Int a, A.ToFloating Int32 a)
+             => Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar Int32) -> Acc (Scalar a) -> Acc (Array DIM2 Word32)
+      mandel x y w l r = A.map (escapeToRGBA l (A.use worldPalette)) $ mandelbrot worldSizeX worldSizeY x y w l r
 
-        uncurry5 :: (Arrays a, Arrays b, Arrays c, Arrays d, Arrays e, Arrays f)
-                => (Acc a -> Acc b -> Acc c -> Acc d -> Acc e -> Acc f)
-                -> (Acc (a, b, c, d, e) -> Acc f)
-        uncurry5 f x = let (a, b, c, d, e) = A.unlift x in f a b c d e
+      uncurry5 :: (Arrays a, Arrays b, Arrays c, Arrays d, Arrays e, Arrays f)
+               => (Acc a -> Acc b -> Acc c -> Acc d -> Acc e -> Acc f)
+               -> (Acc (a,b,c,d,e) -> Acc f)
+      uncurry5 f x = let (a,b,c,d,e) = A.unlift x in f a b c d e
 
-        backend = get optBackend opts
-    in
-    case prec of
-        Float   -> let  cvt :: (Elt a, P.Real a) => Scalar a -> Scalar Float
-                        cvt x = unit (P.realToFrac (the x))
-                    in
-                    World {  worldPrecision = Float
-                           , worldPosX      = cvt worldPosX
-                           , worldPosY      = cvt worldPosY
-                           , worldWidth     = cvt worldWidth
-                           , worldRadius    = cvt worldRadius
-                           , worldRender    = run1 backend (uncurry5 mandel)
-                           , .. 
+      backend = get optBackend opts
+  in
+  case prec of
+    Float  -> let cvt :: (Elt a, P.Real a) => Scalar a -> Scalar Float
+                  cvt x = unit (P.realToFrac (the x))
+              in
+              World { worldPrecision = Float
+                    , worldPosX      = cvt worldPosX
+                    , worldPosY      = cvt worldPosY
+                    , worldWidth     = cvt worldWidth
+                    , worldRadius    = cvt worldRadius
+                    , worldRender    = run1 backend (uncurry5 mandel)
+                    , ..
                     }
-        Double ->   let cvt :: (Elt a, P.Real a) => Scalar a -> Scalar Double
-                        cvt x = unit (P.realToFrac (the x))
-                    in
-                    World   { worldPrecision  = Double
-                            , worldPosX       = cvt worldPosX
-                            , worldPosY       = cvt worldPosY
-                            , worldWidth      = cvt worldWidth
-                            , worldRadius     = cvt worldRadius
-                            , worldRender     = run1 backend (uncurry5 mandel)
-                            , ..
+    Double -> let cvt :: (Elt a, P.Real a) => Scalar a -> Scalar Double
+                  cvt x = unit (P.realToFrac (the x))
+              in
+              World { worldPrecision = Double
+                    , worldPosX      = cvt worldPosX
+                    , worldPosY      = cvt worldPosY
+                    , worldWidth     = cvt worldWidth
+                    , worldRadius    = cvt worldRadius
+                    , worldRender    = run1 backend (uncurry5 mandel)
+                    , ..
                     }
 
 -- Draw the world
--- 
+--
 draw :: World -> IO Picture
 draw = return . worldPicture
 
 -- React to events
--- 
+--
 react :: Config -> Options -> Event -> World -> IO World
 react conf opts event world@World{..} =
-    case event of
-        -- zooming
-        EventKey (Char 'w') s _ _       -> toggle zooming 0.975 s world
-        EventKey (Char 's') s _ _       -> toggle zooming 1.025 s world
+  case event of
+    -- zooming
+    EventKey (Char 'w') s _ _               -> toggle zooming 0.975 s world
+    EventKey (Char 's') s _ _               -> toggle zooming 1.025 s world
 
-        -- panning
-        EventKey (MouseButton LeftButton) s _ p -> toggle panning p s world
-        EventMotion (x, y)
-            | Just (x0, y0) <- worldPanning
-            -> let  dx = (x0-x) * P.realToFrac (the worldWidth) / P.fromIntegral worldSizeX
-                    dy = (y0-y) * P.realToFrac (the worldWidth) / P.fromIntegral worldSizeX
-                in
-                return . dirty
-                    $ World { worldPosX     = unit (the worldPosX + P.realToFrac dx)
-                            , worldPosY     = unit (the worldPosY - P.realToFrac dy)
-                            , worldPanning  = Just (x, y)
-                            , ..                    
-                            }
+    -- panning
+    EventKey (MouseButton LeftButton) s _ p -> toggle panning p s world
+    EventMotion (x,y)
+      | Just (x0,y0) <- worldPanning
+      -> let dx = (x0-x) * P.realToFrac (the worldWidth) / P.fromIntegral worldSizeX
+             dy = (y0-y) * P.realToFrac (the worldWidth) / P.fromIntegral worldSizeX
+         in
+         return . dirty
+                $ World { worldPosX    = unit (the worldPosX + P.realToFrac dx)
+                        , worldPosY    = unit (the worldPosY - P.realToFrac dy)
+                        , worldPanning = Just (x,y)
+                        , ..
+                        }
 
-        EventKey (Char 'a') Down _ _ -> return . dirty
-            $ World { worldIters = unit (P.truncate (P.fromIntegral (the worldIters) * 0.8 :: Double)), ..}
-        EventKey (Char 'd') Down _ _ -> return . dirty
-            $ World { worldIters = unit (P.truncate (P.fromIntegral (the worldIters) * 1.2 :: Double)), ..}
+    -- algorithm
+    EventKey (Char 'a') Down _ _ -> return . dirty
+      $ World { worldIters = unit (P.truncate (P.fromIntegral (the worldIters) * 0.8 :: Double)), .. }
+    EventKey (Char 'd') Down _ _ -> return . dirty
+      $ World { worldIters = unit (P.truncate (P.fromIntegral (the worldIters) * 1.2 :: Double)), .. }
 
-        EventKey (Char 'z') Down _ _ -> return . dirty
-            $ World {worldRadius = unit (the worldRadius * 0.5), .. }
-        EventKey (Char 'c') Down _ _ -> return . dirty
-            $ World {worldRadius = unit (the worldRadius * 2.0), .. }
+    EventKey (Char 'z') Down _ _ -> return . dirty
+      $ World { worldRadius = unit (the worldRadius * 0.5), .. }
+    EventKey (Char 'c') Down _ _ -> return . dirty
+      $ World { worldRadius = unit (the worldRadius * 2.0), .. }
 
-        EventKey (Char 'p') Down _ _ -> return . dirty
-            $ case worldPrecision of
-                Float -> setPrecision opts Double world
-                Double -> setPrecision opts Float world
+    EventKey (Char 'p') Down _ _ -> return . dirty
+      $ case worldPrecision of
+          Float  -> setPrecision opts Double world  -- could fail if no hardware support
+          Double -> setPrecision opts Float  world
 
-        -- presets
-        EventKey (Char d) Down _ _ | isDigit d  -> return . dirty $ loadPreset (read [d]) world
+    -- presets
+    EventKey (Char d) Down _ _ | isDigit d  -> return . dirty $ loadPreset (read [d]) world
 
-        -- misc
-        EventKey (Char 'r') Down _ _               -> return . dirty $ initialWorld conf opts
-        EventKey (Char '.') Down _ _               -> putStrLn (showWorld world) >> return world
-        EventKey (SpecialKey KeyEsc) Down _ _      -> exitSuccess
+    -- misc
+    EventKey (Char 'r') Down _ _            -> return . dirty $ initialWorld conf opts
+    EventKey (Char '.') Down _ _            -> putStrLn (showWorld world) >> return world
+    EventKey (SpecialKey KeyEsc) Down _ _   -> exitSuccess
 
-        _                                          -> return world
+    _                                       -> return world
+  where
+    toggle f x Down = return . dirty . set f (Just x)
+    toggle f _ Up   = return         . set f Nothing
 
-        where
-            toggle f x Down     = return . dirty . set f (Just x)
-            toggle f _ Up       = return         . set f Nothing
-
-            dirty w             = w { worldDirty = True }
+    dirty w         = w { worldDirty = True }
 
 
--- Move and zoom the display based on the key state
-
+-- Move and zoom the display based on the key state.
 --
 advance :: Float -> World -> IO World
 advance _ world@World{..}
@@ -181,22 +181,25 @@ advance _ world@World{..}
   | worldDirty              = return $ updateWorld $ World { worldDirty = False, .. }
   | otherwise               = return world
 
+-- Update the picture
+--
 updateWorld :: World -> World
-updateWorld world = 
-    world { worldPicture = bitmapOfArray (renderWorld world) True}
+updateWorld world =
+  world { worldPicture = bitmapOfArray (renderWorld world) True }
 
-renderWorld :: World -> Array DIM2 Word32 
-renderWorld World{..} = 
-    let !r = worldRender (worldPosX, worldPosY, worldWidth, worldIters, worldRadius)
-    in r
+renderWorld :: World -> Array DIM2 Word32
+renderWorld World{..} =
+  let !r = worldRender (worldPosX, worldPosY, worldWidth, worldIters, worldRadius)
+  in r
+
 
 -- Miscellaneous
---
+-- -------------
 
 zooming :: World :-> Maybe Double
-zooming = lens worldZooming (\f World{..} -> World { worldZooming = f worldZooming, ..})
+zooming = lens worldZooming (\f World{..} -> World { worldZooming = f worldZooming, .. })
 
-panning :: World :-> Maybe (Float, Float)
+panning :: World :-> Maybe (Float,Float)
 panning = lens worldPanning (\f World{..} -> World { worldPanning = f worldPanning, .. })
 
 the :: Elt a => Scalar a -> a
@@ -206,26 +209,26 @@ unit :: Elt a => a -> Scalar a
 unit a = A.fromList Z [a]
 
 -- Presets
---
+-- -------
 
 showWorld :: World -> String
-showWorld World{..} = 
-    show ( the worldPosX
-         , the worldPosY
-         , the worldWidth
-         , the worldIters     
-         , the worldRadius  
-    )
+showWorld World{..} =
+  show ( the worldPosX
+       , the worldPosY
+       , the worldWidth
+       , the worldIters
+       , the worldRadius
+       )
 
-loadWorld :: (Double, Double, Double, Double, Double) -> World -> World
+loadWorld :: (Double,Double,Double,Double,Double) -> World -> World
 loadWorld (posX, posY, width, iters, radius) World{..}
-    = World {  worldPosX    = unit (P.realToFrac posX) `asTypeOf` worldPosX
-            ,  worldPosY    = unit (P.realToFrac posY)
-            ,  worldWidth   = unit (P.realToFrac width)
-            ,  worldIters   = unit (P.truncate iters)
-            ,  worldRadius  = unit (P.realToFrac radius)
-            ,  ..
-    }
+  = World { worldPosX   = unit (P.realToFrac posX) `asTypeOf` worldPosX
+          , worldPosY   = unit (P.realToFrac posY)
+          , worldWidth  = unit (P.realToFrac width)
+          , worldIters  = unit (P.truncate iters)
+          , worldRadius = unit (P.realToFrac radius)
+          , ..
+          }
 
 loadPreset :: Int -> World -> World
 loadPreset n = loadWorld (presets P.!! n)

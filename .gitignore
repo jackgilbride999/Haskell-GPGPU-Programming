@@ -1,3 +1,7 @@
+*
+!*/
+!*.*
+
 dist
 dist-*
 cabal-dev
@@ -22,5 +26,3 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 *.bmp
-Main
-mandelbrot

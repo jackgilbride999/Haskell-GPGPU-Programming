@@ -23,6 +23,10 @@ import Data.Label
 import Data.Word
 import Graphics.Gloss.Accelerate.Data.Picture                       as G
 import Graphics.Gloss.Interface.Pure.Game                           hiding ( Vector, translate, scale )
+
+import Data.Array.Accelerate.Data.Colour.RGB              as A
+import Data.Array.Accelerate.Data.Colour.Names            as A
+
 import System.Exit
 import Prelude                                                      as P
 
@@ -41,7 +45,7 @@ data World where
     { worldPicture      :: !Picture
     , worldDirty        :: Bool
     , worldPrecision    :: Precision
-    , worldPalette      :: !(Vector Word32)
+  --  , worldPalette      :: !(Vector Word32)
     , worldRender       :: (Scalar a, Scalar a, Scalar a, Scalar Int32, Scalar a) -> Array DIM2 Word32
     , worldSizeX        :: !Int
     , worldSizeY        :: !Int
@@ -62,7 +66,7 @@ initialWorld conf opts
   $ World { worldDirty      = True
           , worldPrecision  = Double
           , worldPicture    = blank
-          , worldPalette    = run (get optBackend opts) (ultraPalette 2048)
+         -- , worldPalette    = run (get optBackend opts) (ultraPalette 2048)
           , worldSizeX      = get configWidth conf
           , worldSizeY      = get configHeight conf
           , worldPanning    = Nothing
@@ -80,7 +84,7 @@ setPrecision opts prec World{..} =
   let
       mandel :: (A.RealFloat a, A.FromIntegral Int a, A.ToFloating Int32 a)
              => Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar a) -> Acc (Scalar Int32) -> Acc (Scalar a) -> Acc (Array DIM2 Word32)
-      mandel x y w l r = A.map (escapeToRGBA l (A.use worldPalette)) $ mandelbrot worldSizeX worldSizeY x y w l r
+      mandel x y w l r = A.map (escapeToColour l) $ mandelbrot worldSizeX worldSizeY x y w l r
 
       uncurry5 :: (Arrays a, Arrays b, Arrays c, Arrays d, Arrays e, Arrays f)
                => (Acc a -> Acc b -> Acc c -> Acc d -> Acc e -> Acc f)

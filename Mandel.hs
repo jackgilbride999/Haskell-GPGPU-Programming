@@ -74,11 +74,11 @@ escapeToColour
     :: (RealFloat a, ToFloating Int32 a)
     => Acc (Scalar Int32)
     -> Exp (Complex a, Int32)
-    -> Exp Colour
+    -> Exp Word32
 escapeToColour (the -> limit) (unlift -> (z, n)) =
   if n == limit
-    then black
-    else ultra (toFloating ix / toFloating points)
+    then packRGB black
+    else packRGB $ ultra (toFloating ix / toFloating points)
       where
         mag     = magnitude z
         smooth  = logBase 2 (logBase 2 mag)
@@ -87,31 +87,6 @@ escapeToColour (the -> limit) (unlift -> (z, n)) =
         scale   = 256
         shift   = 1664
         points  = 2048 :: Exp Int
-
-escapeToRGBA
-    :: (RealFloat a, ToFloating Int32 a)
-    => Acc (Scalar Int32)
-    -> Acc (Vector Word32)
-    -> Exp (Complex a, Int32)
-    -> Exp Word32
-escapeToRGBA (the -> limit) palette (unlift -> (z, n)) =
-  if n == limit
-    then packRGB black
-    else palette ! index1 ix
-      where
-        mag     = magnitude z
-        smooth  = logBase 2 (logBase 2 mag)
-        ix      = truncate (sqrt (toFloating n + 1 - smooth) * scale + shift) `mod` length palette
-        --
-        scale   = 256
-        shift   = 1664
-
-ultraPalette
-    :: Int
-    -> Acc (Vector Word32)
-ultraPalette points
-  = A.generate (A.constant (Z :. points))
-               (\ix -> packRGB (ultra (A.toFloating (A.unindex1 ix) / P.fromIntegral points)))
 
 
 -- Pick a nice colour, given a number in the range [0,1].

@@ -17,19 +17,19 @@ import qualified Prelude                                  as P
 
 
 mandelbrot
-    :: forall a. (Num a, RealFloat a, FromIntegral Int a)
+    :: forall a b. (RealFloat a, FromIntegral Int a, Ord b, P.Num b, P.Num (Exp b))
     => Int                                  -- ^ image width
     -> Int                                  -- ^ image height
     -> Acc (Scalar a)                       -- ^ centre x
     -> Acc (Scalar a)                       -- ^ centre y
     -> Acc (Scalar a)                       -- ^ view width
-    -> Acc (Scalar Int32)                   -- ^ iteration limit
+    -> Acc (Scalar b)                   -- ^ iteration limit
     -> Acc (Scalar a)                       -- ^ divergence radius
-    -> Acc (Array DIM2 (Complex a, Int32))
+    -> Acc (Array DIM2 (Complex a, b))
 mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit) (the -> radius) =
   A.generate (A.constant (Z :. screenY :. screenX)) mandelLoop
   where
-    mandelLoop :: Exp DIM2 -> Exp (Complex a, Int32)
+    mandelLoop :: Exp DIM2 -> Exp (Complex a, b)
     mandelLoop ix = while condition updation initialization
       where
         condition zi = snd zi < limit && dot (fst zi) < radius
@@ -40,7 +40,7 @@ mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit)
 -- Convert the given array index, representing a pixel in the final image,
 -- into the corresponding point on the complex plane.
 --
-complexOfPixel :: forall a. (Num a, RealFloat a, FromIntegral Int a) => Exp DIM2 -> Int -> Int -> Exp a -> Exp a -> Exp a -> Exp Int32 -> Exp a -> Exp (Complex a) 
+complexOfPixel :: forall a b . (RealFloat a, FromIntegral Int a) => Exp DIM2 -> Int -> Int -> Exp a -> Exp a -> Exp a -> Exp b -> Exp a -> Exp (Complex a) 
 complexOfPixel (unlift -> Z :. y :. x) screenX screenY x0 y0 width limit radius =
   lift (re :+ im)
     where
@@ -51,17 +51,14 @@ complexOfPixel (unlift -> Z :. y :. x) screenX screenY x0 y0 width limit radius 
       im     = ymin + fromIntegral y * height / fromIntegral (constant screenY)
 
 -- Divergence condition
-dot :: forall a. (Num a, RealFloat a, FromIntegral Int a)
-    => Exp (Complex a) -> Exp a
+dot :: (Elt a, P.Num (Exp a)) => Exp (Complex a) -> Exp a
 dot (unlift -> x :+ y) = x*x + y*y
 
 -- Take a single step of the recurrence relation
-step :: forall a. (Num a, RealFloat a, FromIntegral Int a)
-    => Exp (Complex a) -> Exp (Complex a, Int32) -> Exp (Complex a, Int32)
+step :: (RealFloat a, P.Num (Exp b), Elt b, P.Num b) => Exp (Complex a) -> Exp (Complex a, b) -> Exp (Complex a, b)
 step c (unlift -> (z, i)) = lift (next c z, i + constant 1)
 
-next :: forall a. (Num a, RealFloat a, FromIntegral Int a)
-    => Exp (Complex a) -> Exp (Complex a) -> Exp (Complex a)
+next :: (P.Num a) => a -> a -> a
 next c z = c + z * z
 
 -- Convert the iteration count on escape to a colour.
@@ -109,18 +106,17 @@ ultra p =
 -- interpolate each of the RGB components
 interp :: (Exp Float, Exp Float)-> (Exp Colour , Exp Colour) -> Exp Float -> Exp Colour
 interp (x0,x1) (y0,y1) x =
-        rgb (linear (x0,x1) (r0,r1) x)
-      (linear (x0,x1) (g0,g1) x)
-      (linear (x0,x1) (b0,b1) x)
+        rgb 
+          (linear (x0,x1) (r0,r1) x)
+          (linear (x0,x1) (g0,g1) x)
+          (linear (x0,x1) (b0,b1) x)
   where
       RGB r0 g0 b0 = unlift y0 :: RGB (Exp Float)
       RGB r1 g1 b1 = unlift y1 :: RGB (Exp Float)
 
 
 -- linear interpolation
-linear :: (Exp Float, Exp Float)
-       -> (Exp Float, Exp Float)
-       -> Exp Float
-       -> Exp Float
+--linear :: (P.Fractional (Exp a)) => (Exp a, Exp a) -> (Exp a, Exp a) -> Exp a -> Exp a
+linear :: (P.Fractional a) => (a, a) -> (a, a) -> a -> a
 linear (x0,x1) (y0,y1) x =
   y0 + (x - x0) * (y1 - y0) / (x1 - x0)

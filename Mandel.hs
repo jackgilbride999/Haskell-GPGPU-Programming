@@ -33,24 +33,23 @@ mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit)
     mandelLoop :: Exp DIM2 -> Exp (Complex a, Int32)
     mandelLoop ix = while condition updation initialization
       where
-        z0 = complexOfPixel ix
         condition zi = snd zi < limit && dot (fst zi) < radius
         updation zi = step z0 zi
         initialization = lift (z0, constant 0)
+        z0 = complexOfPixel ix screenX screenY x0 y0 width limit radius
 
-    -- Convert the given array index, representing a pixel in the final image,
-    -- into the corresponding point on the complex plane.
-    --
-    complexOfPixel :: Exp DIM2 -> Exp (Complex a)
-    complexOfPixel (unlift -> Z :. y :. x) =
-      lift (re :+ im)
-        where
-          height = P.fromIntegral screenY / P.fromIntegral screenX * width
-          xmin   = x0 - width  / 2
-          ymin   = y0 - height / 2
-          --
-          re     = xmin + fromIntegral x * width  / fromIntegral (constant screenX)
-          im     = ymin + fromIntegral y * height / fromIntegral (constant screenY)
+-- Convert the given array index, representing a pixel in the final image,
+-- into the corresponding point on the complex plane.
+--
+complexOfPixel :: forall a. (Num a, RealFloat a, FromIntegral Int a) => Exp DIM2 -> Int -> Int -> Exp a -> Exp a -> Exp a -> Exp Int32 -> Exp a -> Exp (Complex a) 
+complexOfPixel (unlift -> Z :. y :. x) screenX screenY x0 y0 width limit radius =
+  lift (re :+ im)
+    where
+      height = P.fromIntegral screenY / P.fromIntegral screenX * width
+      xmin   = x0 - width  / 2
+      ymin   = y0 - height / 2
+      re     = xmin + fromIntegral x * width  / fromIntegral (constant screenX)
+      im     = ymin + fromIntegral y * height / fromIntegral (constant screenY)
 
 -- Divergence condition
 dot :: forall a. (Num a, RealFloat a, FromIntegral Int a)

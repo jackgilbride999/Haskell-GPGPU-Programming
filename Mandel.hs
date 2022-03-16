@@ -28,37 +28,36 @@ mandelbrot
     -> Acc (Scalar a)                       -- ^ divergence radius
     -> Acc (Array DIM2 (Complex a, Int32))
 mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit) (the -> radius) =
-  A.generate (A.constant (Z :. screenY :. screenX))
-             (\ix -> let z0 = complexOfPixel ix
-                         zn = while (\zi -> snd zi       < limit
-                                         && dot (fst zi) < radius)
-                                    (\zi -> step z0 zi)
-                                    (lift (z0, constant 0))
-                     in
-                     zn)
+  A.generate (A.constant (Z :. screenY :. screenX)) mandelLoop
   where
+    mandelLoop :: Exp DIM2 -> Exp (Complex a, Int32)
+    mandelLoop ix = while condition updation initialization
+      where 
+        z0 = complexOfPixel ix
+        condition zi = snd zi < limit && dot (fst zi) < radius
+        updation zi = step z0 zi
+        initialization = lift (z0, constant 0)
+
+
     -- Convert the given array index, representing a pixel in the final image,
     -- into the corresponding point on the complex plane.
     --
     complexOfPixel :: Exp DIM2 -> Exp (Complex a)
     complexOfPixel (unlift -> Z :. y :. x) =
-      let
+      lift (re :+ im)
+        where
           height = P.fromIntegral screenY / P.fromIntegral screenX * width
           xmin   = x0 - width  / 2
           ymin   = y0 - height / 2
           --
           re     = xmin + (fromIntegral x * width)  / fromIntegral (constant screenX)
           im     = ymin + (fromIntegral y * height) / fromIntegral (constant screenY)
-      in
-      lift (re :+ im)
 
     -- Divergence condition
-    --
     dot :: Exp (Complex a) -> Exp a
     dot (unlift -> x :+ y) = x*x + y*y
 
     -- Take a single step of the recurrence relation
-    --
     step :: Exp (Complex a) -> Exp (Complex a, Int32) -> Exp (Complex a, Int32)
     step c (unlift -> (z, i)) = lift (next c z, i + constant 1)
 
@@ -77,9 +76,7 @@ escapeToColour
     -> Exp (Complex a, Int32)
     -> Exp Word32
 escapeToColour (the -> limit) (unlift -> (z, n)) =
-  if n == limit
-    then packRGB black
-    else packRGB $ ultra (toFloating ix / toFloating points)
+  n == limit ? (packRGB black, packRGB $ ultra (toFloating ix / toFloating points))
       where
         mag     = magnitude z
         smooth  = logBase 2 (logBase 2 mag)
@@ -88,7 +85,6 @@ escapeToColour (the -> limit) (unlift -> (z, n)) =
         scale   = 256
         shift   = 1664
         points  = 2048 :: Exp Int
-
 
 -- Pick a nice colour, given a number in the range [0,1].
 --

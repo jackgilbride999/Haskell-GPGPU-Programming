@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE RebindableSyntax    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators       #-}
+
 {-# LANGUAGE ViewPatterns        #-}
 
 
@@ -32,12 +32,11 @@ mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit)
   where
     mandelLoop :: Exp DIM2 -> Exp (Complex a, Int32)
     mandelLoop ix = while condition updation initialization
-      where 
+      where
         z0 = complexOfPixel ix
         condition zi = snd zi < limit && dot (fst zi) < radius
         updation zi = step z0 zi
         initialization = lift (z0, constant 0)
-
 
     -- Convert the given array index, representing a pixel in the final image,
     -- into the corresponding point on the complex plane.
@@ -50,20 +49,22 @@ mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit)
           xmin   = x0 - width  / 2
           ymin   = y0 - height / 2
           --
-          re     = xmin + (fromIntegral x * width)  / fromIntegral (constant screenX)
-          im     = ymin + (fromIntegral y * height) / fromIntegral (constant screenY)
+          re     = xmin + fromIntegral x * width  / fromIntegral (constant screenX)
+          im     = ymin + fromIntegral y * height / fromIntegral (constant screenY)
 
-    -- Divergence condition
-    dot :: Exp (Complex a) -> Exp a
-    dot (unlift -> x :+ y) = x*x + y*y
+-- Divergence condition
+dot :: forall a. (Num a, RealFloat a, FromIntegral Int a)
+    => Exp (Complex a) -> Exp a
+dot (unlift -> x :+ y) = x*x + y*y
 
-    -- Take a single step of the recurrence relation
-    step :: Exp (Complex a) -> Exp (Complex a, Int32) -> Exp (Complex a, Int32)
-    step c (unlift -> (z, i)) = lift (next c z, i + constant 1)
+-- Take a single step of the recurrence relation
+step :: forall a. (Num a, RealFloat a, FromIntegral Int a)
+    => Exp (Complex a) -> Exp (Complex a, Int32) -> Exp (Complex a, Int32)
+step c (unlift -> (z, i)) = lift (next c z, i + constant 1)
 
-    next :: Exp (Complex a) -> Exp (Complex a) -> Exp (Complex a)
-    next c z = c + z * z
-
+next :: forall a. (Num a, RealFloat a, FromIntegral Int a)
+    => Exp (Complex a) -> Exp (Complex a) -> Exp (Complex a)
+next c z = c + z * z
 
 -- Convert the iteration count on escape to a colour.
 --
@@ -90,11 +91,15 @@ escapeToColour (the -> limit) (unlift -> (z, n)) =
 --
 ultra :: Exp Float -> Exp Colour
 ultra p =
-  if p <= p1 then interp (p0,p1) (c0,c1) p else
-  if p <= p2 then interp (p1,p2) (c1,c2) p else
-  if p <= p3 then interp (p2,p3) (c2,c3) p else
-  if p <= p4 then interp (p3,p4) (c3,c4) p else
-                  interp (p4,p5) (c4,c5) p
+  p <= p1 ? (
+    interp (p0,p1) (c0,c1) p,
+    p <= p2 ? (
+      interp (p1,p2) (c1,c2) p,
+      p <= p3 ? (
+        interp (p2,p3) (c2,c3) p,
+        p <= p4 ? (
+          interp (p3,p4) (c3,c4) p,
+                  interp (p4,p5) (c4,c5) p))))
   where
     p0 = 0.0     ; c0 = rgb8 0   7   100
     p1 = 0.16    ; c1 = rgb8 32  107 203
@@ -103,15 +108,16 @@ ultra p =
     p4 = 0.8575  ; c4 = rgb8 0   2   0
     p5 = 1.0     ; c5 = c0
 
-    -- interpolate each of the RGB components
-    interp (x0,x1) (y0,y1) x =
-      let
-          RGB r0 g0 b0 = unlift y0 :: RGB (Exp Float)
-          RGB r1 g1 b1 = unlift y1 :: RGB (Exp Float)
-      in
-      rgb (linear (x0,x1) (r0,r1) x)
-          (linear (x0,x1) (g0,g1) x)
-          (linear (x0,x1) (b0,b1) x)
+-- interpolate each of the RGB components
+interp :: (Exp Float, Exp Float)-> (Exp Colour , Exp Colour) -> Exp Float -> Exp Colour
+interp (x0,x1) (y0,y1) x =
+        rgb (linear (x0,x1) (r0,r1) x)
+      (linear (x0,x1) (g0,g1) x)
+      (linear (x0,x1) (b0,b1) x)
+  where
+      RGB r0 g0 b0 = unlift y0 :: RGB (Exp Float)
+      RGB r1 g1 b1 = unlift y1 :: RGB (Exp Float)
+
 
 -- linear interpolation
 linear :: (Exp Float, Exp Float)

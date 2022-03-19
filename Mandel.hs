@@ -55,7 +55,7 @@ dot :: (Elt a, P.Num (Exp a)) => Exp (Complex a) -> Exp a
 dot (unlift -> x :+ y) = x*x + y*y
 
 -- Take a single step of the recurrence relation
-step :: (RealFloat a, P.Num (Exp b), Elt b, P.Num b) => Exp (Complex a) -> Exp (Complex a, b) -> Exp (Complex a, b)
+step :: (RealFloat a, P.Num (Exp b), Elt b, P.Num b) => Exp a -> Exp (a, b) -> Exp (a, b)
 step c (unlift -> (z, i)) = lift (next c z, i + constant 1)
 
 next :: (P.Num a) => a -> a -> a
@@ -116,7 +116,6 @@ interp (x0,x1) (y0,y1) x =
 
 
 -- linear interpolation
---linear :: (P.Fractional (Exp a)) => (Exp a, Exp a) -> (Exp a, Exp a) -> Exp a -> Exp a
 linear :: (P.Fractional a) => (a, a) -> (a, a) -> a -> a
 linear (x0,x1) (y0,y1) x =
   y0 + (x - x0) * (y1 - y0) / (x1 - x0)

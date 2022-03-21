@@ -51,11 +51,11 @@ complexOfPixel (unlift -> Z :. y :. x) screenX screenY x0 y0 width limit radius 
       im     = ymin + fromIntegral y * height / fromIntegral (constant screenY)
 
 -- Divergence condition
-dot :: (Elt a, P.Num (Exp a)) => Exp (Complex a) -> Exp a
+dot :: Num a => Exp (Complex a) -> Exp a
 dot (unlift -> x :+ y) = x*x + y*y
 
 -- Take a single step of the recurrence relation
-step :: (RealFloat a, P.Num (Exp b), Elt b, P.Num b) => Exp a -> Exp (a, b) -> Exp (a, b)
+step :: (RealFloat a, Num b, P.Num b) => Exp a -> Exp (a, b) -> Exp (a, b)
 step c (unlift -> (z, i)) = lift (next c z, i + constant 1)
 
 next :: (P.Num a) => a -> a -> a

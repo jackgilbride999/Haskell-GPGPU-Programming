@@ -35,13 +35,13 @@ mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit)
         condition zi = snd zi < limit && dot (fst zi) < radius
         updation zi = step z0 zi
         initialization = lift (z0, constant 0)
-        z0 = complexOfPixel ix screenX screenY x0 y0 width limit radius
+        z0 = complexOfPixel ix screenX screenY x0 y0 width
 
 -- Convert the given array index, representing a pixel in the final image,
 -- into the corresponding point on the complex plane.
 --
-complexOfPixel :: forall a. (Num a, RealFloat a, FromIntegral Int a) => Exp DIM2 -> Int -> Int -> Exp a -> Exp a -> Exp a -> Exp Int32 -> Exp a -> Exp (Complex a) 
-complexOfPixel (unlift -> Z :. y :. x) screenX screenY x0 y0 width limit radius =
+complexOfPixel :: forall a. (Num a, RealFloat a, FromIntegral Int a) => Exp DIM2 -> Int -> Int -> Exp a -> Exp a -> Exp a -> Exp (Complex a) 
+complexOfPixel (unlift -> Z :. y :. x) screenX screenY x0 y0 width =
   lift (re :+ im)
     where
       height = P.fromIntegral screenY / P.fromIntegral screenX * width

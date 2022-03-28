@@ -29,7 +29,6 @@ mandelbrot
 mandelbrot screenX screenY (the -> x0) (the -> y0) (the -> width) (the -> limit) (the -> radius) =
   A.generate (A.constant (Z :. screenY :. screenX)) mandelLoop
   where
-    mandelLoop :: Exp DIM2 -> Exp (Complex a, b)
     mandelLoop ix = while condition updation initialization
       where
         condition zi = snd zi < limit && dot (fst zi) < radius

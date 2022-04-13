@@ -1,0 +1,10 @@
+Upgrades from static to dynamic version:
+
+- Add Main.hs
+- Add World.hs
+- Add Config.hs
+
+- Add Examples folder for boilerplate helper code
+
+- Add escapeToRGBA function
+- Add ultraPalette function

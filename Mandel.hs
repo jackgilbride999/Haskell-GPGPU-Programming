@@ -10,8 +10,8 @@ import Data.Array.Accelerate.Data.Complex                 as A
 import Data.Array.Accelerate.Data.Colour.RGB              as A
 import Data.Array.Accelerate.Data.Colour.Names            as A
 
-import Data.Array.Accelerate.LLVM.Native                  as CPU
--- import Data.Array.Accelerate.LLVM.PTX                     as PTX
+--import Data.Array.Accelerate.LLVM.Native                  as CPU
+import Data.Array.Accelerate.LLVM.PTX                     as PTX
 
 import qualified Prelude                                  as P
 
@@ -129,4 +129,4 @@ main =
           $ A.map (escapeToColour limit)
           $ mandelbrot width height limit radius ((-0.7) :+ 0) 3.067
   in
-  writeImageToBMP "mandelbrot.bmp" (run img)
+  writeImageToBMP "mandelbrot.bmp" (PTX.run img)

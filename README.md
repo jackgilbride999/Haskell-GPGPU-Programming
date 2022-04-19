@@ -6,6 +6,6 @@ Adapted from example at https://www.acceleratehs.org/examples/mandelbrot.html.
 
 ## Usage
 ```
-ghc -O2 -threaded Mandel
-./Mandel 
+ghc -O2 -threaded Main
+./Main 
 ```

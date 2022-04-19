@@ -2,4 +2,8 @@
 
 Haskell accelerate implementation of Mandelbrot Set generation adapted from http://www.acceleratehs.org/examples/mandelbrot.html
 
-v1.0
+## Usage
+```
+ghc -O2 -threaded mandelbrot
+./mandelbrot 
+```
